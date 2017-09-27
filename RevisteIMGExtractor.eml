@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component inheritJdk="true">
+	<exclude-output/>
+	<contentEntry url="file://$MODULE_DIR$"/>
+	<lib name="pdfbox-2.0.4.jar" scope="COMPILE">
+		<srcroot url="file://E:/Downloads/pdfbox-2.0.4-src.zip"/>
+	</lib>
+	<lib name="pdfbox-tools-2.0.4.jar" scope="COMPILE">
+		<srcroot url="file://E:/Downloads/java-image-scaling-0.8.5-sources.jar"/>
+	</lib>
+</component>
