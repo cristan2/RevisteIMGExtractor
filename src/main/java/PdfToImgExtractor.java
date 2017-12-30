@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashSet;
 
-import main.resources.Config;
+import main.resources.RevConfig;
 import main.resources.helper.Logger;
 import main.resources.helper.MagazineFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -18,8 +18,8 @@ import com.mortennobel.imagescaling.ResampleOp;
 
 public class PdfToImgExtractor {
 
-	private Config config;
-	private Config.PDFExtractorConfig extractorConfig;
+	private RevConfig config;
+	private RevConfig.PDFExtractorConfig extractorConfig;
 
 	private static final float DPI_72_SCALE = 1.0f;
 	private static final float DPI_144_SCALE = 2.0f;
@@ -29,8 +29,8 @@ public class PdfToImgExtractor {
 	private int imageDpi = 200;
 	private String imageFormat = "jpg";
 	private float compressionVal;
-	private int maxImageHeightPx = 1600;
-	
+	private int maxImageHeightPx;
+
 	// default thumbnail settings
 	private boolean isThumbsEnabled = true;
 	private int thumbHeightPx = 300;
@@ -53,7 +53,7 @@ public class PdfToImgExtractor {
 	/**
 	 * default constructor
 	 */
-	public PdfToImgExtractor(Config config) {
+	public PdfToImgExtractor(RevConfig config) {
 		this.config = config;
 		this.extractorConfig = config. new PDFExtractorConfig();
 
@@ -64,7 +64,7 @@ public class PdfToImgExtractor {
 	/**
 	 * Build image extractor with logging
 	 */
-	public PdfToImgExtractor(Config config, Logger log) {
+	public PdfToImgExtractor(RevConfig config, Logger log) {
 		this(config);
 		this.isLoggingEnabled = true;
 		this.log = log;
@@ -85,11 +85,18 @@ public class PdfToImgExtractor {
 	}
 
 	private void initProperties() {
+
+		// location settings
 		destinationFolderPath = config.TARGET_DIR;
+
+		// target image settings
+		maxImageHeightPx =  extractorConfig.maxImageHeightPx;
+		compressionVal = extractorConfig.compressionVal;
+
+		// thumbnail settings
 		isThumbsEnabled = extractorConfig.enableThumbs;
 		if (isThumbsEnabled) thumbHeightPx = extractorConfig.thumbHeightPx;
 
-		compressionVal = extractorConfig.compressionVal;
 	}
 
 
@@ -111,10 +118,10 @@ public class PdfToImgExtractor {
 			// skip if revista a fost procesata
 			if (nrPaginiPDF <= targetDir.list().length-1) {
 				if (config.OVERWRITE_DIRS) {
-					System.out.println("Revista " + baseFileName + " a fost deja procesata. PROCESSING AGAIN");
+					log.print("Revista " + baseFileName + " a fost deja procesata. PROCESSING AGAIN");
 				} else {
 					log.write(targetDir.toString() + " exista deja, SKIPPING");
-					System.out.println("Revista " + baseFileName + " a fost deja procesata. Skipping");
+					log.print("Revista " + baseFileName + " a fost deja procesata. Skipping");
 					return true;
 				}
 			}
@@ -143,9 +150,9 @@ public class PdfToImgExtractor {
 				// skip if file exists
 				if (outputFile.exists()) {
 					if (config.OVERWRITE_FILES) {
-						System.out.println("\t... pg. " + (nrPaginaCurenta) + " exista deja. OVERWRITING");
+						log.print("\t... pg. " + (nrPaginaCurenta) + " exista deja. OVERWRITING");
 					} else {
-						System.out.println("\t... pg. " + (nrPaginaCurenta) + " exista deja. Skipping");
+						log.print("\t... pg. " + (nrPaginaCurenta) + " exista deja. Skipping");
 						continue;
 					}
 				}
@@ -159,8 +166,7 @@ public class PdfToImgExtractor {
 					writeImage(imgThumb, outputFile, compressionVal/2);
 				}
 
-
-				System.out.println("\t... pg. " + (nrPaginaCurenta) + " in " + (System.currentTimeMillis() - timeStartCurrFile) + " ms.");
+				log.print("\t... pg. " + (nrPaginaCurenta) + " in " + (System.currentTimeMillis() - timeStartCurrFile) + " ms.");
 			}
 
 			log.write(targetDir.toString() + "\t" + nrPaginiPDF);
@@ -182,14 +188,15 @@ public class PdfToImgExtractor {
 	private int updateOffset(int currentOffset, int indexPgCurenta) {
 		if (config.colectieSetPgLipsa.keySet().contains(currentIssue)) {
 			HashSet<Integer> setPgLipsaNrCurent = config.colectieSetPgLipsa.get(currentIssue);
+			// verifica si urmatoarele pagini lipsa, daca sunt consecutive
 			int paginaCurenta = indexPgCurenta + 1 + currentOffset;
 			while (setPgLipsaNrCurent.contains(paginaCurenta)) {
-				System.out.println("\tPagina " + paginaCurenta + " lipseste, offset = " + (currentOffset+1));
+				log.print("\tPagina " + paginaCurenta + " lipseste, offset = " + (currentOffset+1));
 				currentOffset++;
 				paginaCurenta++;
 			}
 		}
-		// ramane acelasi offset daca nu e o revista cu pagini lipsa sau pagina curenta cu lipseste
+		// ramane acelasi offset daca nu e o revista cu pagini lipsa sau pagina curenta nu lipseste
 		return currentOffset;
 	}
 
@@ -226,7 +233,7 @@ public class PdfToImgExtractor {
 //	}
 
 	private void setIssueName(MagazineFile targetDir) {
-		this.currentIssue = targetDir.anRevista + targetDir.lunaRevista;
+		this.currentIssue = targetDir.anRevista + targetDir.dirNumericValue;
 	}
 
 	private void setBaseFileName(String name) {
@@ -271,7 +278,7 @@ public class PdfToImgExtractor {
 //
 //		// skip if page corrupted
 //		if ( skipCorruptPages(nrPaginaCurenta + offsetUpdateValue)) {
-//			System.out.println("\tPagina " + (nrPaginaCurenta + offsetUpdateValue) + " e cu bau-bau. SKIPPING");
+//			log.print("\tPagina " + (nrPaginaCurenta + offsetUpdateValue) + " e cu bau-bau. SKIPPING");
 //			continue;
 //		} else {
 //			pageOffset += offsetUpdateValue;

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Logger {
 
-    ArrayList<String> log = new ArrayList<String>() {
+    private ArrayList<String> log = new ArrayList<String>() {
         @Override
         public String toString() {
             if (log.isEmpty()) return "Nothing here";
@@ -20,6 +20,16 @@ public class Logger {
 
     public void write(String s) {
         log.add(s);
+    }
+
+    public void print(String s) {
+        // TODO add log levels
+        // write(s);
+        System.out.println(s);
+    }
+
+    public void printJobEnd() {
+        System.out.println(this);
     }
 
     @Override

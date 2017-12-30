@@ -3,7 +3,7 @@ package main.java;
 import java.io.File;
 import java.io.IOException;
 
-import main.resources.Config;
+import main.resources.RevConfig;
 import main.resources.helper.FileHandler;
 import main.resources.helper.Logger;
 import main.resources.helper.MagazineFile;
@@ -15,17 +15,16 @@ public class MainExtractorScript {
 		
 		long timeStart = System.currentTimeMillis();
 
-		Config config = new Config();
+		RevConfig config = new RevConfig();
 		FileHandler fileHandler = new FileHandler(config);
 		Logger log = new Logger();
 
 //		File[] files = config.FILTRU_NUME.isEmpty() ? fileHandler.loadFiles() : fileHandler.loadFilesWithNameAndExtensionFilters();
 		File[] files = fileHandler.loadFilesWithNameAndExtensionFilters();
 
-		System.out.println("Am incarcat " + files.length + " din " + fileHandler.sourceDir.getPath());
+		log.print("Am incarcat " + files.length + " fisiere din " + fileHandler.sourceDir.getPath());
 
 		PdfToImgExtractor pdfExtractor = new PdfToImgExtractor(config, log);
-
 		
 		// iterate PDF files
 		int nrRevista = 0;
@@ -43,10 +42,7 @@ public class MainExtractorScript {
 		
 		long totalTime = (System.currentTimeMillis() - timeStart) / 1000;
 		String t = totalTime > 60 ? (totalTime / 60 + ":" + totalTime%60 + " min") : totalTime + " sec";
-		System.out.println("JOB DONE IN " + t + " secunde");
-		System.out.println(log);
+		log.print("JOB DONE IN " + t + " secunde");
+		log.printJobEnd();
 	}
-
-
-
 }
